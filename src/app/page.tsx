@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
-import { authClient } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { LinkIcon, ClipboardPaste, Sparkles } from "lucide-react";
+import { authClient } from "@/lib/auth-client";
+import { useMutation, useQuery } from "convex/react";
+import { ClipboardPaste, LinkIcon, Sparkles } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { toast } from "sonner";
+import { api } from "../../convex/_generated/api";
+
+const subscribe = () => () => {};
+const getIsMac = () => navigator.userAgent.includes("Mac");
+const getIsMacServer = () => false;
 
 function extractUrl(text: string): string | null {
-  const match = text.match(
-    /https?:\/\/[^\s<>"{}|\\^`[\]]+/i
-  );
+  const match = text.match(/https?:\/\/[^\s<>"{}|\\^`[\]]+/i);
   return match ? match[0] : null;
 }
 
@@ -21,11 +23,12 @@ export default function Home() {
   const { data: session, isPending } = authClient.useSession();
   const board = useQuery(
     api.boards.getByOwnerId,
-    session?.user?.id ? { ownerId: session.user.id } : "skip"
+    session?.user?.id ? { ownerId: session.user.id } : "skip",
   );
   const createBoard = useMutation(api.boards.create);
   const addLink = useMutation(api.links.add);
   const [pasting, setPasting] = useState(false);
+  const isMac = useSyncExternalStore(subscribe, getIsMac, getIsMacServer);
 
   useEffect(() => {
     if (session?.user && board === null) {
@@ -108,11 +111,7 @@ export default function Home() {
               <>
                 Press{" "}
                 <kbd className="rounded-md border bg-background px-2 py-0.5 text-sm font-mono">
-                  {typeof navigator !== "undefined" &&
-                  navigator.userAgent.includes("Mac")
-                    ? "⌘"
-                    : "Ctrl"}
-                  +V
+                  {isMac ? "⌘" : "Ctrl"}+V
                 </kbd>{" "}
                 to paste a link
               </>

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useMemo, useState } from "react";
+import { use, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../../../convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
@@ -17,6 +17,7 @@ import {
   Loader2,
   ArrowLeft,
 } from "lucide-react";
+import Link from "next/link";
 import { Id } from "../../../../convex/_generated/dataModel";
 
 const CATEGORIES = [
@@ -31,6 +32,10 @@ const CATEGORIES = [
   "travel", "science", "space", "politics", "environment", "education",
   "photography", "other",
 ];
+
+const subscribe = () => () => {};
+const getIsMac = () => navigator.userAgent.includes("Mac");
+const getIsMacServer = () => false;
 
 function extractUrl(text: string): string | null {
   const match = text.match(/https?:\/\/[^\s<>"{}|\\^`[\]]+/i);
@@ -61,6 +66,7 @@ export default function BoardPage({
   const removeLink = useMutation(api.links.remove);
   const [pasting, setPasting] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const isMac = useSyncExternalStore(subscribe, getIsMac, getIsMacServer);
 
   const isOwner = session?.user?.id === board?.ownerId;
 
@@ -126,10 +132,10 @@ export default function BoardPage({
       <div className="flex h-dvh flex-col items-center justify-center gap-4">
         <p className="text-lg text-muted-foreground">Board not found</p>
         <Button variant="outline" asChild>
-          <a href="/">
+          <Link href="/">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Go home
-          </a>
+          </Link>
         </Button>
       </div>
     );
@@ -140,12 +146,12 @@ export default function BoardPage({
       <header className="flex-shrink-0 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex items-center justify-between px-6 py-3">
           <div className="flex items-center gap-3">
-            <a href="/" className="flex items-center gap-2">
+            <Link href="/" className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <LinkIcon className="h-4 w-4 text-primary-foreground" />
               </div>
               <span className="font-semibold">{board.name}</span>
-            </a>
+            </Link>
             <Badge variant="secondary" className="font-mono text-xs">
               /s/{board.shortCode}
             </Badge>
@@ -223,11 +229,7 @@ export default function BoardPage({
                   <>
                     Press{" "}
                     <kbd className="rounded border bg-muted px-1.5 py-0.5 font-mono text-xs">
-                      {typeof navigator !== "undefined" &&
-                      navigator.userAgent.includes("Mac")
-                        ? "⌘"
-                        : "Ctrl"}
-                      +V
+                      {isMac ? "⌘" : "Ctrl"}+V
                     </kbd>{" "}
                     to paste your first link
                   </>
