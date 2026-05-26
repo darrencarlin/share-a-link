@@ -40,6 +40,33 @@ export default function Home() {
   }, [session, board, createBoard]);
 
   useEffect(() => {
+    if (!session?.user || !board) return;
+
+    const pendingUrl = sessionStorage.getItem("pendingUrl");
+    if (!pendingUrl) return;
+    sessionStorage.removeItem("pendingUrl");
+
+    (async () => {
+      setPasting(true);
+      try {
+        const linkId = await addLink({ boardId: board._id, url: pendingUrl });
+        toast.success("Link saved! AI is categorizing it...");
+        router.push(`/s/${board.shortCode}`);
+
+        fetch("/api/categorize", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ linkId }),
+        });
+      } catch {
+        toast.error("Failed to save link");
+      } finally {
+        setPasting(false);
+      }
+    })();
+  }, [session, board, addLink, router]);
+
+  useEffect(() => {
     async function handlePaste(e: ClipboardEvent) {
       const text = e.clipboardData?.getData("text/plain");
       if (!text) return;
@@ -51,6 +78,7 @@ export default function Home() {
       }
 
       if (!session?.user) {
+        sessionStorage.setItem("pendingUrl", url);
         toast("Sign in to save links");
         authClient.signIn.social({ provider: "google" });
         return;
