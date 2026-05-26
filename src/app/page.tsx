@@ -42,14 +42,19 @@ export default function Home() {
   useEffect(() => {
     if (!session?.user || !board) return;
 
-    const pendingUrl = sessionStorage.getItem("pendingUrl");
+    const pendingUrl = localStorage.getItem("pendingUrl");
     if (!pendingUrl) return;
-    sessionStorage.removeItem("pendingUrl");
+    localStorage.removeItem("pendingUrl");
 
     (async () => {
       setPasting(true);
       try {
-        const linkId = await addLink({ boardId: board._id, url: pendingUrl });
+        const linkId = await addLink({
+          boardId: board._id,
+          url: pendingUrl,
+          createdById: session.user.id,
+          createdByName: session.user.name || "Unknown",
+        });
         toast.success("Link saved! AI is categorizing it...");
         router.push(`/s/${board.shortCode}`);
 
@@ -78,7 +83,7 @@ export default function Home() {
       }
 
       if (!session?.user) {
-        sessionStorage.setItem("pendingUrl", url);
+        localStorage.setItem("pendingUrl", url);
         toast("Sign in to save links");
         authClient.signIn.social({ provider: "google" });
         return;
@@ -91,7 +96,12 @@ export default function Home() {
 
       setPasting(true);
       try {
-        const linkId = await addLink({ boardId: board._id, url });
+        const linkId = await addLink({
+          boardId: board._id,
+          url,
+          createdById: session.user.id,
+          createdByName: session.user.name || "Unknown",
+        });
         toast.success("Link saved! AI is categorizing it...");
         router.push(`/s/${board.shortCode}`);
 

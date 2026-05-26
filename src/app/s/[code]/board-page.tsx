@@ -15,6 +15,7 @@ import {
   Sparkles,
   Loader2,
   ArrowLeft,
+  User,
 } from "lucide-react";
 import Link from "next/link";
 import { Id } from "../../../../convex/_generated/dataModel";
@@ -49,20 +50,97 @@ function getDomain(url: string): string {
   }
 }
 
+function timeAgo(timestamp: number): string {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}mo ago`;
+  return `${Math.floor(months / 12)}y ago`;
+}
+
+function getUnclaimedKey(code: string) {
+  return `unclaimed:${code}`;
+}
+
+function getUnclaimedLinks(code: string): string[] {
+  try {
+    const raw = localStorage.getItem(getUnclaimedKey(code));
+    if (!raw) return [];
+    const data = JSON.parse(raw) as { ids: string[]; ts: number };
+    if (Date.now() - data.ts > 24 * 60 * 60 * 1000) {
+      localStorage.removeItem(getUnclaimedKey(code));
+      return [];
+    }
+    return data.ids;
+  } catch {
+    return [];
+  }
+}
+
+function addUnclaimedLink(code: string, linkId: string) {
+  const existing = getUnclaimedLinks(code);
+  existing.push(linkId);
+  localStorage.setItem(
+    getUnclaimedKey(code),
+    JSON.stringify({ ids: existing, ts: Date.now() }),
+  );
+}
+
+function clearUnclaimedLinks(code: string) {
+  localStorage.removeItem(getUnclaimedKey(code));
+}
+
 export default function BoardPage({ code }: { code: string }) {
   const { data: session } = authClient.useSession();
   const board = useQuery(api.boards.getByShortCode, { shortCode: code });
   const links = useQuery(
     api.links.listByBoard,
-    board ? { boardId: board._id } : "skip"
+    board ? { boardId: board._id } : "skip",
   );
   const addLink = useMutation(api.links.add);
+  const claimLinks = useMutation(api.links.claim);
   const removeLink = useMutation(api.links.remove);
   const [pasting, setPasting] = useState(false);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [unclaimedCount, setUnclaimedCount] = useState(0);
+  const [claimed, setClaimed] = useState(false);
   const isMac = useSyncExternalStore(subscribe, getIsMac, getIsMacServer);
 
   const isOwner = session?.user?.id === board?.ownerId;
+
+  useEffect(() => {
+    setUnclaimedCount(getUnclaimedLinks(code).length);
+  }, [code]);
+
+  useEffect(() => {
+    if (!session?.user || !board || claimed) return;
+
+    const unclaimed = getUnclaimedLinks(code);
+    if (unclaimed.length === 0) return;
+
+    (async () => {
+      try {
+        await claimLinks({
+          linkIds: unclaimed as Id<"links">[],
+          boardId: board._id,
+          userId: session.user.id,
+          userName: session.user.name || "Unknown",
+        });
+        clearUnclaimedLinks(code);
+        setUnclaimedCount(0);
+        setClaimed(true);
+        toast.success(`Claimed ${unclaimed.length} link${unclaimed.length === 1 ? "" : "s"}!`);
+      } catch {
+        // Claim failed silently — links stay anonymous
+      }
+    })();
+  }, [session, board, code, claimLinks, claimed]);
 
   const activeCategories = useMemo(() => {
     if (!links) return new Set<string>();
@@ -94,8 +172,18 @@ export default function BoardPage({ code }: { code: string }) {
 
       setPasting(true);
       try {
-        const linkId = await addLink({ boardId: board._id, url });
+        const linkId = await addLink({
+          boardId: board._id,
+          url,
+          createdById: session?.user?.id,
+          createdByName: session?.user?.name || undefined,
+        });
         toast.success("Link saved! AI is categorizing it...");
+
+        if (!session?.user) {
+          addUnclaimedLink(code, linkId);
+          setUnclaimedCount((c) => c + 1);
+        }
 
         fetch("/api/categorize", {
           method: "POST",
@@ -111,7 +199,7 @@ export default function BoardPage({ code }: { code: string }) {
 
     window.addEventListener("paste", handlePaste);
     return () => window.removeEventListener("paste", handlePaste);
-  }, [board, addLink]);
+  }, [board, addLink, session, code]);
 
   if (board === undefined) {
     return (
@@ -165,6 +253,25 @@ export default function BoardPage({ code }: { code: string }) {
           </div>
         </div>
       </header>
+
+      {!session && unclaimedCount > 0 && (
+        <div className="flex-shrink-0 border-b bg-primary/5 px-6 py-2.5">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              <User className="mr-1.5 inline h-3.5 w-3.5" />
+              You added {unclaimedCount} link{unclaimedCount === 1 ? "" : "s"} — sign in to claim {unclaimedCount === 1 ? "it" : "them"}
+            </p>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-7 text-xs"
+              onClick={() => authClient.signIn.social({ provider: "google" })}
+            >
+              Sign in with Google
+            </Button>
+          </div>
+        </div>
+      )}
 
       <div className="flex-shrink-0 border-b bg-muted/30">
         <div className="flex items-center gap-1.5 overflow-x-auto px-6 py-2 scrollbar-none">
@@ -256,6 +363,10 @@ export default function BoardPage({ code }: { code: string }) {
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <span className="truncate">{getDomain(link.url)}</span>
+                    <span className="text-border">·</span>
+                    <span className="flex-shrink-0">
+                      {link.createdByName || "Anonymous"} · {timeAgo(link.createdAt)}
+                    </span>
                     {link.status === "categorizing" ? (
                       <>
                         <span className="text-border">·</span>
@@ -267,8 +378,8 @@ export default function BoardPage({ code }: { code: string }) {
                     ) : (
                       link.summary && (
                         <>
-                          <span className="text-border">·</span>
-                          <span className="truncate">{link.summary}</span>
+                          <span className="text-border hidden sm:inline">·</span>
+                          <span className="truncate hidden sm:inline">{link.summary}</span>
                         </>
                       )
                     )}

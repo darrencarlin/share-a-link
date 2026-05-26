@@ -76,15 +76,43 @@ export const add = mutation({
   args: {
     boardId: v.id("boards"),
     url: v.string(),
+    createdById: v.optional(v.string()),
+    createdByName: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const linkId = await ctx.db.insert("links", {
       boardId: args.boardId,
       url: args.url,
       status: "categorizing",
+      createdById: args.createdById ?? "anonymous",
+      createdByName: args.createdByName ?? "Anonymous",
       createdAt: Date.now(),
     });
     return linkId;
+  },
+});
+
+export const claim = mutation({
+  args: {
+    linkIds: v.array(v.id("links")),
+    boardId: v.id("boards"),
+    userId: v.string(),
+    userName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    for (const linkId of args.linkIds) {
+      const link = await ctx.db.get(linkId);
+      if (
+        link &&
+        link.boardId === args.boardId &&
+        link.createdById === "anonymous"
+      ) {
+        await ctx.db.patch(linkId, {
+          createdById: args.userId,
+          createdByName: args.userName,
+        });
+      }
+    }
   },
 });
 
