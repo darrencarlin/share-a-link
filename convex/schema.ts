@@ -14,7 +14,6 @@ export default defineSchema({
     url: v.string(),
     ogTitle: v.optional(v.string()),
     ogDescription: v.optional(v.string()),
-    ogImage: v.optional(v.string()),
     category: v.optional(v.string()),
     summary: v.optional(v.string()),
     status: v.union(v.literal("categorizing"), v.literal("done"), v.literal("error")),

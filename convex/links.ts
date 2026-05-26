@@ -100,7 +100,6 @@ export const updateWithMetadata = internalMutation({
     linkId: v.id("links"),
     ogTitle: v.optional(v.string()),
     ogDescription: v.optional(v.string()),
-    ogImage: v.optional(v.string()),
     category: v.string(),
     summary: v.string(),
     status: v.union(v.literal("done"), v.literal("error")),
@@ -119,7 +118,6 @@ export const categorize = action({
 
     let ogTitle: string | undefined;
     let ogDescription: string | undefined;
-    let ogImage: string | undefined;
 
     try {
       const response = await fetch(link.url, {
@@ -136,9 +134,6 @@ export const categorize = action({
         html.match(/<meta[^>]*property="og:description"[^>]*content="([^"]*)"/)?.[ 1] ??
         html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:description"/)?.[ 1] ??
         html.match(/<meta[^>]*name="description"[^>]*content="([^"]*)"/)?.[ 1];
-      ogImage =
-        html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]*)"/)?.[ 1] ??
-        html.match(/<meta[^>]*content="([^"]*)"[^>]*property="og:image"/)?.[ 1];
     } catch (e) {
       console.error("OG fetch failed:", e);
     }
@@ -188,7 +183,6 @@ Respond with ONLY valid JSON, no markdown, no code fences:
         linkId: args.linkId,
         ogTitle,
         ogDescription,
-        ogImage,
         category: parsed.category,
         summary: parsed.summary,
         status: "done",
@@ -199,7 +193,6 @@ Respond with ONLY valid JSON, no markdown, no code fences:
         linkId: args.linkId,
         ogTitle,
         ogDescription,
-        ogImage,
         category: "other",
         summary: "Could not categorize this link",
         status: "error",

@@ -6,7 +6,6 @@ import { api } from "../../../../convex/_generated/api";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   LinkIcon,
@@ -238,81 +237,77 @@ export default function BoardPage({
             </div>
           </div>
         ) : (
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="divide-y divide-border">
             {filteredLinks.map((link) => (
-              <Card
+              <div
                 key={link._id}
-                className="flex flex-col gap-3 p-4 transition-colors hover:bg-muted/50"
+                className="group flex items-center gap-4 py-3 px-2 -mx-2 rounded-lg transition-colors hover:bg-muted/50"
               >
-                {link.ogImage ? (
-                  <img
-                    src={link.ogImage}
-                    alt=""
-                    className="h-36 w-full rounded-md object-cover"
-                  />
-                ) : (
-                  <div className="flex h-36 w-full items-center justify-center rounded-md bg-muted">
-                    <LinkIcon className="h-8 w-8 text-muted-foreground/40" />
-                  </div>
-                )}
+                <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground">
+                  <LinkIcon className="h-4 w-4" />
+                </div>
 
-                <div className="flex min-w-0 flex-1 flex-col gap-1.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <a
-                        href={link.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group flex items-center gap-1.5 font-medium leading-tight hover:underline"
-                      >
-                        <span className="line-clamp-2">
-                          {link.ogTitle || getDomain(link.url)}
+                <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                  <div className="flex items-center gap-2">
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="truncate font-medium hover:underline"
+                    >
+                      {link.ogTitle || getDomain(link.url)}
+                    </a>
+                    <ExternalLink className="hidden h-3 w-3 flex-shrink-0 text-muted-foreground group-hover:block" />
+                  </div>
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <span className="truncate">{getDomain(link.url)}</span>
+                    {link.status === "categorizing" ? (
+                      <>
+                        <span className="text-border">·</span>
+                        <span className="flex items-center gap-1">
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                          Categorizing...
                         </span>
-                        <ExternalLink className="hidden h-3.5 w-3.5 flex-shrink-0 text-muted-foreground group-hover:block" />
-                      </a>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {getDomain(link.url)}
-                      </p>
-                    </div>
-                    {isOwner && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-7 w-7 flex-shrink-0 text-muted-foreground hover:text-destructive"
-                        onClick={() =>
-                          removeLink({ id: link._id as Id<"links"> })
-                        }
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      </>
+                    ) : (
+                      link.summary && (
+                        <>
+                          <span className="text-border">·</span>
+                          <span className="truncate">{link.summary}</span>
+                        </>
+                      )
                     )}
                   </div>
+                </div>
 
+                <div className="flex flex-shrink-0 items-center gap-2">
                   {link.status === "categorizing" ? (
-                    <div className="flex items-center gap-2">
-                      <div className="h-5 w-16 animate-pulse rounded-full bg-muted" />
-                      <div className="h-4 w-full animate-pulse rounded bg-muted" />
-                    </div>
+                    <div className="h-5 w-14 animate-pulse rounded-full bg-muted" />
                   ) : (
-                    <>
-                      {link.category && (
-                        <Badge
-                          variant="secondary"
-                          className="w-fit text-xs cursor-pointer"
-                          onClick={() => setActiveCategory(link.category!)}
-                        >
-                          {link.category}
-                        </Badge>
-                      )}
-                      {link.summary && (
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {link.summary}
-                        </p>
-                      )}
-                    </>
+                    link.category && (
+                      <Badge
+                        variant="secondary"
+                        className="cursor-pointer text-xs"
+                        onClick={() => setActiveCategory(link.category!)}
+                      >
+                        {link.category}
+                      </Badge>
+                    )
+                  )}
+                  {isOwner && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground opacity-0 group-hover:opacity-100 hover:text-destructive"
+                      onClick={() =>
+                        removeLink({ id: link._id as Id<"links"> })
+                      }
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
                   )}
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
