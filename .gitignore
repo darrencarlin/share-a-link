@@ -36,6 +36,12 @@ yarn-error.log*
 # vercel
 .vercel
 
+# convex
+convex/_generated
+
+# better-auth sqlite
+sqlite.db
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
