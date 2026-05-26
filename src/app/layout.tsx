@@ -18,8 +18,24 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Share a Link",
-  description: "Share links with friends, let AI organize",
+  title: {
+    default: "Share a Link — AI-Organized Link Sharing",
+    template: "%s",
+  },
+  description:
+    "Paste any URL and AI instantly categorizes and summarizes it. Share your curated link board with friends.",
+  openGraph: {
+    title: "Share a Link — AI-Organized Link Sharing",
+    description:
+      "Paste any URL and AI instantly categorizes and summarizes it. Share your curated link board with friends.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Share a Link — AI-Organized Link Sharing",
+    description:
+      "Paste any URL and AI instantly categorizes and summarizes it. Share your curated link board with friends.",
+  },
 };
 
 export default function RootLayout({
