@@ -2,24 +2,17 @@
 
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth-client";
+import { useIsMac } from "@/hooks/use-is-mac";
+import { extractUrl } from "@/utils/extract-url";
 import { useMutation, useQuery } from "convex/react";
-import { ClipboardPaste, LinkIcon, Sparkles } from "lucide-react";
+import { ClipboardPaste, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../convex/_generated/api";
 
-const subscribe = () => () => {};
-const getIsMac = () => navigator.userAgent.includes("Mac");
-const getIsMacServer = () => false;
-
-function extractUrl(text: string): string | null {
-  const match = text.match(/https?:\/\/[^\s<>"{}|\\^`[\]]+/i);
-  return match ? match[0] : null;
-}
-
 export default function Home() {
-  const router = useRouter();
+  const { push } = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const board = useQuery(
     api.boards.getByOwnerId,
@@ -28,7 +21,7 @@ export default function Home() {
   const createBoard = useMutation(api.boards.create);
   const addLink = useMutation(api.links.add);
   const [pasting, setPasting] = useState(false);
-  const isMac = useSyncExternalStore(subscribe, getIsMac, getIsMacServer);
+  const isMac = useIsMac();
 
   useEffect(() => {
     if (session?.user && board === null) {
@@ -56,7 +49,7 @@ export default function Home() {
           createdByName: session.user.name || "Unknown",
         });
         toast.success("Link saved! AI is categorizing it...");
-        router.push(`/s/${board.shortCode}`);
+        push(`/s/${board.shortCode}`);
 
         fetch("/api/categorize", {
           method: "POST",
@@ -69,7 +62,7 @@ export default function Home() {
         setPasting(false);
       }
     })();
-  }, [session, board, addLink, router]);
+  }, [session, board, addLink, push]);
 
   useEffect(() => {
     async function handlePaste(e: ClipboardEvent) {
@@ -103,7 +96,7 @@ export default function Home() {
           createdByName: session.user.name || "Unknown",
         });
         toast.success("Link saved! AI is categorizing it...");
-        router.push(`/s/${board.shortCode}`);
+        push(`/s/${board.shortCode}`);
 
         await fetch("/api/categorize", {
           method: "POST",
@@ -119,15 +112,12 @@ export default function Home() {
 
     window.addEventListener("paste", handlePaste);
     return () => window.removeEventListener("paste", handlePaste);
-  }, [session, board, addLink, router]);
+  }, [session, board, addLink, push]);
 
   return (
     <div className="flex h-dvh w-full flex-col items-center justify-center bg-background px-4">
       <div className="flex max-w-2xl flex-col items-center gap-8 text-center">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary">
-            <LinkIcon className="h-6 w-6 text-primary-foreground" />
-          </div>
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">
             Share a Link
           </h1>
@@ -138,12 +128,12 @@ export default function Home() {
         </p>
 
         <div className="flex flex-col items-center gap-4 rounded-2xl border-2 border-dashed border-muted-foreground/25 bg-muted/50 px-12 py-10 transition-colors hover:border-muted-foreground/40">
-          <ClipboardPaste className="h-10 w-10 text-muted-foreground/60" />
+          <ClipboardPaste className="size-10 text-muted-foreground/60" />
           <p className="text-lg font-medium">
             {pasting ? (
               <span className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 animate-spin" />
-                Saving link...
+                <Sparkles className="size-5 animate-spin" />
+                Saving link…
               </span>
             ) : (
               <>

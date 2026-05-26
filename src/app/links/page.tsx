@@ -8,26 +8,26 @@ import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
 export default function LinksRedirect() {
-  const router = useRouter();
+  const { replace } = useRouter();
   const { data: session, isPending } = authClient.useSession();
   const board = useQuery(
     api.boards.getByOwnerId,
-    session?.user?.id ? { ownerId: session.user.id } : "skip"
+    session?.user?.id ? { ownerId: session.user.id } : "skip",
   );
 
   useEffect(() => {
     if (!isPending && !session) {
-      router.replace("/");
+      replace("/");
       return;
     }
     if (board) {
-      router.replace(`/s/${board.shortCode}`);
+      replace(`/s/${board.shortCode}`);
     }
-  }, [session, isPending, board, router]);
+  }, [session, isPending, board, replace]);
 
   return (
     <div className="flex h-dvh items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      <Loader2 className="size-8 animate-spin text-muted-foreground" />
     </div>
   );
 }

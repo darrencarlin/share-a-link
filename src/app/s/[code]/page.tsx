@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 
   const linkCount = links.length;
-  const categories = [...new Set(links.map((l) => l.category).filter(Boolean))];
+  const categories = [...new Set(links.flatMap((l) => l.category ? [l.category] : []))];
   const topCategories = categories.slice(0, 5).join(", ");
 
   const description =

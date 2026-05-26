@@ -100,19 +100,21 @@ export const claim = mutation({
     userName: v.string(),
   },
   handler: async (ctx, args) => {
-    for (const linkId of args.linkIds) {
-      const link = await ctx.db.get(linkId);
-      if (
-        link &&
-        link.boardId === args.boardId &&
-        link.createdById === "anonymous"
-      ) {
-        await ctx.db.patch(linkId, {
-          createdById: args.userId,
-          createdByName: args.userName,
-        });
-      }
-    }
+    await Promise.all(
+      args.linkIds.map(async (linkId) => {
+        const link = await ctx.db.get(linkId);
+        if (
+          link &&
+          link.boardId === args.boardId &&
+          link.createdById === "anonymous"
+        ) {
+          await ctx.db.patch(linkId, {
+            createdById: args.userId,
+            createdByName: args.userName,
+          });
+        }
+      }),
+    );
   },
 });
 
