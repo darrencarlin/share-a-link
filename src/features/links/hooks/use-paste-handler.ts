@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useMutation } from "convex/react";
 import { toast } from "sonner";
 import { api } from "../../../../convex/_generated/api";
@@ -24,17 +24,8 @@ export function usePasteHandler({
   const addLink = useMutation(api.links.add);
   const [pasting, setPasting] = useState(false);
 
-  useEffect(() => {
-    async function handlePaste(e: ClipboardEvent) {
-      const text = e.clipboardData?.getData("text/plain");
-      if (!text) return;
-
-      const url = extractUrl(text);
-      if (!url) {
-        toast.error("No valid URL found in clipboard");
-        return;
-      }
-
+  const saveUrl = useCallback(
+    async (url: string) => {
       if (!boardId) return;
 
       setPasting(true);
@@ -63,11 +54,41 @@ export function usePasteHandler({
       } finally {
         setPasting(false);
       }
+    },
+    [boardId, boardCode, userId, userName, addLink, onSaved],
+  );
+
+  useEffect(() => {
+    async function handlePaste(e: ClipboardEvent) {
+      const text = e.clipboardData?.getData("text/plain");
+      if (!text) return;
+
+      const url = extractUrl(text);
+      if (!url) {
+        toast.error("No valid URL found in clipboard");
+        return;
+      }
+
+      await saveUrl(url);
     }
 
     window.addEventListener("paste", handlePaste);
     return () => window.removeEventListener("paste", handlePaste);
-  }, [boardId, boardCode, userId, userName, addLink, onSaved]);
+  }, [saveUrl]);
 
-  return { pasting };
+  const pasteFromClipboard = useCallback(async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      const url = extractUrl(text);
+      if (!url) {
+        toast.error("No valid URL found in clipboard");
+        return;
+      }
+      await saveUrl(url);
+    } catch {
+      toast.error("Clipboard access denied. Copy a link and try again.");
+    }
+  }, [saveUrl]);
+
+  return { pasting, pasteFromClipboard };
 }

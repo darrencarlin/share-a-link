@@ -18,6 +18,7 @@ import { BoardHeader } from "@/features/boards/components/board-header";
 import { CategoryBar } from "@/features/links/components/category-bar";
 import { ClaimBanner } from "@/features/links/components/claim-banner";
 import { LinkList } from "@/features/links/components/link-list";
+import { PasteButton } from "@/features/links/components/paste-button";
 import type { Id } from "../../../../convex/_generated/dataModel";
 
 export default function BoardPage({ code }: { code: string }) {
@@ -35,16 +36,13 @@ export default function BoardPage({ code }: { code: string }) {
 
   const isOwner = session?.user?.id === board?.ownerId;
 
-  const unclaimedCount = useMemo(
-    () => getUnclaimedLinks(code).length,
-    [code],
-  );
+  const unclaimedCount = useMemo(() => getUnclaimedLinks(code).length, [code]);
 
   const onLinkSaved = useCallback(() => {
     // Unclaimed count updates reactively via useMemo on next render
   }, []);
 
-  const { pasting } = usePasteHandler({
+  const { pasting, pasteFromClipboard } = usePasteHandler({
     boardId: board?._id,
     boardCode: code,
     userId: session?.user?.id,
@@ -121,7 +119,7 @@ export default function BoardPage({ code }: { code: string }) {
         onCategoryChange={setActiveCategory}
       />
 
-      <main className="flex-1 overflow-y-auto p-6">
+      <main className="flex-1 overflow-y-auto p-2 md:p-6">
         {filteredLinks === undefined ? (
           <div className="flex h-full items-center justify-center">
             <Loader2 className="size-8 animate-spin text-muted-foreground" />
@@ -131,9 +129,7 @@ export default function BoardPage({ code }: { code: string }) {
             <ClipboardPaste className="size-12 text-muted-foreground/40" />
             <div>
               <p className="text-lg font-medium">
-                {activeCategory
-                  ? `No ${activeCategory} links`
-                  : "No links yet"}
+                {activeCategory ? `No ${activeCategory} links` : "No links yet"}
               </p>
               <p className="text-sm text-muted-foreground">
                 {activeCategory ? (
@@ -165,6 +161,8 @@ export default function BoardPage({ code }: { code: string }) {
           />
         )}
       </main>
+
+      <PasteButton pasting={pasting} onPaste={pasteFromClipboard} />
     </div>
   );
 }

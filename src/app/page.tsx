@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { authClient } from "@/lib/auth-client";
 import { useIsMac } from "@/hooks/use-is-mac";
 import { extractUrl } from "@/utils/extract-url";
@@ -115,7 +116,10 @@ export default function Home() {
   }, [session, board, addLink, push]);
 
   return (
-    <div className="flex h-dvh w-full flex-col items-center justify-center bg-background px-4">
+    <div className="relative flex h-dvh w-full flex-col items-center justify-center bg-background px-4">
+      <div className="absolute top-4 right-4">
+        <ThemeToggle />
+      </div>
       <div className="flex max-w-2xl flex-col items-center gap-8 text-center">
         <div className="flex items-center gap-3">
           <h1 className="text-4xl font-bold tracking-tight sm:text-5xl">

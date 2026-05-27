@@ -55,7 +55,7 @@ export function LinkList({
               <ExternalLink className="hidden size-3 flex-shrink-0 text-muted-foreground group-hover:block" />
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <span className="truncate">{getDomain(link.url)}</span>
+              <span className="flex-shrink-0">{getDomain(link.url)}</span>
               <span className="text-border">·</span>
               <span className="flex-shrink-0">
                 {link.createdByName || "Anonymous"} · {timeAgo(link.createdAt)}

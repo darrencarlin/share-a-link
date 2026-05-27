@@ -3,16 +3,62 @@
 import { useMemo } from "react";
 
 const CATEGORIES = [
-  "article", "blog", "news", "video", "podcast", "music",
-  "tool", "app", "library", "framework", "api", "documentation",
-  "tutorial", "course", "book", "research", "paper", "reference",
-  "social", "forum", "community", "shopping", "product", "deal",
-  "entertainment", "game", "meme", "humor", "design", "inspiration",
-  "portfolio", "startup", "business", "finance", "crypto", "ai",
-  "machine-learning", "data-science", "devops", "security", "open-source",
-  "job", "career", "event", "conference", "recipe", "health", "fitness",
-  "travel", "science", "space", "politics", "environment", "education",
-  "photography", "other",
+  "article",
+  "blog",
+  "news",
+  "video",
+  "podcast",
+  "music",
+  "tool",
+  "app",
+  "library",
+  "framework",
+  "api",
+  "documentation",
+  "tutorial",
+  "course",
+  "book",
+  "research",
+  "paper",
+  "reference",
+  "social",
+  "forum",
+  "community",
+  "shopping",
+  "product",
+  "deal",
+  "entertainment",
+  "game",
+  "meme",
+  "humor",
+  "design",
+  "inspiration",
+  "portfolio",
+  "startup",
+  "business",
+  "finance",
+  "crypto",
+  "ai",
+  "machine-learning",
+  "data-science",
+  "devops",
+  "security",
+  "open-source",
+  "job",
+  "career",
+  "event",
+  "conference",
+  "recipe",
+  "health",
+  "fitness",
+  "travel",
+  "science",
+  "space",
+  "politics",
+  "environment",
+  "education",
+  "photography",
+  "other",
 ];
 
 type CategoryBarProps = {
@@ -37,7 +83,7 @@ export function CategoryBar({
 
   return (
     <div className="flex-shrink-0 border-b bg-muted/30">
-      <div className="flex items-center gap-1.5 overflow-x-auto px-6 py-2 scrollbar-none">
+      <div className="flex items-center gap-1.5 overflow-x-auto px-3 md:px-6 py-2 scrollbar-none">
         <button
           type="button"
           onClick={() => onCategoryChange(null)}

@@ -1,6 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { LinkIcon, ClipboardPaste, Sparkles } from "lucide-react";
 import Link from "next/link";
 
@@ -25,7 +26,7 @@ export function BoardHeader({ name, shortCode, pasting }: BoardHeaderProps) {
             /s/{shortCode}
           </Badge>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <div className="items-center gap-3 text-sm text-muted-foreground hidden md:flex">
           {pasting ? (
             <span className="flex items-center gap-1.5">
               <Sparkles className="size-4 animate-spin" />
@@ -37,6 +38,7 @@ export function BoardHeader({ name, shortCode, pasting }: BoardHeaderProps) {
               Paste to add
             </span>
           )}
+          <ThemeToggle />
         </div>
       </div>
     </header>
